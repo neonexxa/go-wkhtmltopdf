@@ -1,7 +1,7 @@
 package pdf
 
 /*
-#cgo LDFLAGS: -lwkhtmltox
+#cgo LDFLAGS: -L${SRCDIR}/wkhtmltox -lwkhtmltox
 #include <stdlib.h>
 #include <wkhtmltox/pdf.h>
 */
@@ -141,6 +141,10 @@ type Object struct {
 	// JS scripts.
 	// Default: 300.
 	JavascriptDelay uint64
+
+	// The content for page's window.status variable to be equal to before
+	// rendering page
+	WindowStatus string
 
 	// Zoom factor to use for the document content.
 	// Default: 1.
@@ -293,7 +297,8 @@ func (o *Object) Destroy() {
 	o.settings = nil
 }
 
-func (o *Object) setOption(name, value string) error {
+// SetOption is the low-level API to set options.
+func (o *Object) SetOption(name, value string) error {
 	if name = strings.TrimSpace(name); name == "" {
 		return errors.New("object option name cannot be empty")
 	}
@@ -315,7 +320,7 @@ func (o *Object) setOptions() error {
 		return errors.New("cannot use uninitialized or destroyed object")
 	}
 
-	setter := o.setOption
+	setter := o.SetOption
 	opts := []*setOp{
 		// General options.
 		newSetOp("page", o.location, optTypeString, setter, true),
@@ -357,6 +362,7 @@ func (o *Object) setOptions() error {
 		newSetOp("load.username", o.Username, optTypeString, setter, false),
 		newSetOp("load.password", o.Password, optTypeString, setter, false),
 		newSetOp("load.jsdelay", o.JavascriptDelay, optTypeUint, setter, false),
+		newSetOp("load.windowStatus", o.WindowStatus, optTypeString, setter, false),
 		newSetOp("load.zoomFactor", o.Zoom, optTypeFloat, setter, false),
 		newSetOp("load.blockLocalFileAccess", o.BlockLocalFileAccess, optTypeBool, setter, true),
 		newSetOp("load.stopSlowScripts", o.StopSlowScripts, optTypeBool, setter, true),
